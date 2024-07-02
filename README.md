@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IMPACT NCD Japan microsimulation
 
 --------------------------------------------------------------------------------
@@ -21,3 +22,6 @@ Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 ## IMPACTncd_Engl deployment instructions
 
+=======
+# IMPACTaf
+>>>>>>> 737ec5cd088019a5722702b3af96b6c25d35eeee

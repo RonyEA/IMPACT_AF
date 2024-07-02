@@ -40,6 +40,23 @@ diseases:
       type: ~
   notes: .na
 
+# - name: isch_stroke
+#   friendly_name: Ischaemic Stroke
+#   meta:
+#     incidence:
+#       type: 3 # might depend on exposures and rr, but will also depend on one of the conditions.
+#       influenced_by_disease_name:
+#         - af
+#       can_recur: no
+#     diagnosis:
+#       type: 1
+#       probability: 1
+#       duration_distr: NBI # in the Eng model its ziNBI
+#       mm_wt: 0.8
+#     mortality:
+#       type: ~
+#   notes: .na
+
 - name: nonmodelled
   friendly_name: nonmodelled
   meta:
@@ -51,6 +68,7 @@ diseases:
       type: 3
       influenced_by_disease_name:
         - af
+        # - isch_stroke
       code: 1
   notes: .na
 maxlag: 10 # To allow init year of 2001. 
