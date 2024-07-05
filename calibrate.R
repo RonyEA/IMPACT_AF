@@ -1,4 +1,5 @@
 source("./global.R")
+
 IMPACTncd <- Simulation$new("./inputs/sim_design_calibration.yaml")
 
 IMPACTncd$
@@ -9,7 +10,7 @@ IMPACTncd$
   del_outputs()
   
 # Run validation if TRUE. 
-if (FALSE) {
+if (TRUE) {
   IMPACTncd$
     run(1:10, multicore = TRUE, "sc0")$
     export_summaries(

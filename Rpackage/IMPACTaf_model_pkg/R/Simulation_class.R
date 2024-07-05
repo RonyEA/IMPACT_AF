@@ -53,15 +53,18 @@ Simulation <-
       #' @param sim_prm Either a path to a yaml file or a Design object.
       #' @return A new `Simulation` object.
       initialize = function(sim_prm) {
-        if (is.character(sim_prm))
+        if (is.character(sim_prm)) {
           self$design <- Design$new(sim_prm)
-        else if (inherits(sim_prm, "Design"))
+        } else if (inherits(sim_prm, "Design")) {
           self$design <- sim_prm$clone(deep = TRUE)
-        else
+        } else {
           stop("sim_prm need to be a path to an appropriate yaml file or a Design object")
+        }
 
-        data.table::setDTthreads(threads = self$design$sim_prm$clusternumber,
-                                 restore_after_fork = NULL)
+        data.table::setDTthreads(
+          threads = self$design$sim_prm$clusternumber,
+          restore_after_fork = NULL
+        )
         fst::threads_fst(
           nr_of_threads = self$design$sim_prm$clusternumber,
           reset_after_fork = NULL
@@ -87,7 +90,7 @@ Simulation <-
    }
 
         # NOTE code below is duplicated in Synthpop class. This is intentional
-		    private$create_new_folder(self$design$sim_prm$synthpop_dir,self$design$sim_prm$logs)
+        private$create_new_folder(self$design$sim_prm$synthpop_dir, self$design$sim_prm$logs)
 
         private$create_empty_calibration_prms_file(replace = FALSE)
 
@@ -129,7 +132,8 @@ Simulation <-
         ds <- unique(data.table(ds1, ds2))
 
         private$causality_structure <- make_graph(unlist(transpose(ds)),
-                                                  directed = TRUE)
+          directed = TRUE
+        )
 
         # European Standardized Population 2013 (esp) weights
         tt <- data.table(agegrp = agegrp_name(0, 99), 
@@ -142,12 +146,13 @@ Simulation <-
 
         private$esp_weights <- copy(absorb_dt(esp, tt))
 
-        private$death_codes <- unlist(lapply(self$diseases, function(x)
-          x$meta$mortality$code))
+        private$death_codes <- unlist(lapply(self$diseases, function(x) {
+          x$meta$mortality$code
+        }))
         private$death_codes[["alive"]] <- 0L
 
-        private$primary_prevention_scn = function(synthpop) NULL # default for baseline scenario
-        private$secondary_prevention_scn = function(synthpop) NULL # default for baseline scenario
+        private$primary_prevention_scn <- function(synthpop) NULL # default for baseline scenario
+        private$secondary_prevention_scn <- function(synthpop) NULL # default for baseline scenario
 
         invisible(self)
       },
@@ -193,7 +198,6 @@ Simulation <-
       #' @param scenario_nam A string for the scenario name (i.e. sc1)
       #' @return The invisible self for chaining.
       run = function(mc, multicore = TRUE, scenario_nam) {
-
         if (!is.integer(mc)) stop("mc need to be an integer")
         if (any(mc <= 0)) stop("mc need to be positive integer")
         
@@ -205,8 +209,9 @@ Simulation <-
         # design$sim_prm$n_synthpop_aggregation > 1
         if (anyNA(mc) || any(is.infinite(mc)) || length(mc) < 1L ||
             (length(mc) > 1L && diff(mc[1:2]) == 0) ||
-            (length(mc) > 1L && diff(range(diff(mc))) > sqrt(.Machine$double.eps)))
+          (length(mc) > 1L && diff(range(diff(mc))) > sqrt(.Machine$double.eps))) {
               stop("mc need to be a sequential integer vector, or a scalar")
+        }
         # NOTE mc is in fact mc_aggr. mc_ is the mc of the synthpop
         mc_sp <-
           (
@@ -239,7 +244,6 @@ Simulation <-
           })
 
         if (multicore) {
-
           if (self$design$sim_prm$logs) private$time_mark("Start of parallelisation")
 
           if (.Platform$OS.type == "windows") {
@@ -259,9 +263,11 @@ Simulation <-
                   library(dqrng)
                   library(data.table)
                 })),
-                rscript_args = c("--no-init-file",
+                rscript_args = c(
+                  "--no-init-file",
                                  "--no-site-file",
-                                 "--no-environ"),
+                  "--no-environ"
+                ),
                 setup_strategy = "parallel"
               ) # used for clustering. Windows compatible
 
@@ -299,41 +305,18 @@ Simulation <-
               private$run_sim(mc_ = mc_iter, scenario_nam)
 
             }          
-
-
-          xps_dt <- foreach(
-            mc_iter = mc_sp,
-            .inorder = FALSE,
-            .options.multicore = list(preschedule = FALSE),
-            .verbose = self$design$sim_prm$logs,
-            .packages = c(
-              "R6",
-              "gamlss.dist",
-              "dqrng",
-              "CKutils",
-              "IMPACTaf",
-              "fst",
-              "data.table"
-            ),
-            .export = NULL,
-            .noexport = NULL # c("time_mark")
-          ) %dopar% {
-
-            private$run_sim(mc_ = mc_iter, scenario_nam)
-
-          }
-
-          if (self$design$sim_prm$logs) private$time_mark("End of parallelisation")
          }
-        } else {
-          if (self$design$sim_prm$logs)
+          if (self$design$sim_prm$logs) private$time_mark("End of parallelisation")
+        } else { # if multicore = FALSE
+          if (self$design$sim_prm$logs) {
             private$time_mark("Start of single-core run")
+          }
 
           lapply(mc_sp, private$run_sim, scenario_nam)
 
-          if (self$design$sim_prm$logs)
+          if (self$design$sim_prm$logs) {
             private$time_mark("End of single-core run")
-
+          }
         }
 
         if (self$design$sim_prm$avoid_appending_csv) {
@@ -345,8 +328,9 @@ Simulation <-
             private$collect_files("xps", "_xps_esp.csv$", to_mc_aggr = FALSE)
           }
 
-          if (self$design$sim_prm$logs)
+          if (self$design$sim_prm$logs) {
             private$time_mark("End of collecting mc lifecourse files")
+          }
         }   
 
         while (sink.number() > 0L) sink()
@@ -392,6 +376,20 @@ Simulation <-
         clbr <- fread("./simulation/calibration_prms.csv", 
                         colClasses = list(numeric = c("af_incd_clbr_fctr",
                                                        "nonmodelled_ftlt_clbr_fctr")))
+        memedian <- function(x) {
+          out_med <- median(x)
+          out_mean <- mean(x)
+
+          if (out_med == 0 & out_mean == 0) {
+            out <- 1
+          } else if (out_med == 0) {
+             out <- out_mean
+          } else {
+            out <- out_med
+          }
+
+          return(out)
+        }
 
         if (replace) {
           age_start <- self$design$sim_prm$ageL
@@ -420,7 +418,7 @@ Simulation <-
         unclbr <- fread(file.path(self$design$sim_prm$output_dir, "summaries", "incd_scaled_up.csv.gz"), 
                         select = c("year", "age", "sex", "mc", "popsize", "af_incd"))
         unclbr <- unclbr[age == age_, .(af_incd = af_incd/popsize), keyby = .(age, sex, year, mc)
-          ][, .(af_incd = mean(af_incd)), keyby = .(age, sex, year)]
+          ][, .(af_incd = memedian(af_incd)), keyby = .(age, sex, year)]
         
         # for CHD
         # fit a log-log linear model to the uncalibrated results and store the coefficients
@@ -467,8 +465,8 @@ Simulation <-
           af_prvl = af_prvl/popsize,
           #stroke_prvl = stroke_prvl/popsize,
           popsize, age, sex, year, mc)
-          ][, .(af_prvl = mean(af_prvl),
-                popsize = mean(popsize)), keyby = .(age, sex, year)]
+          ][, .(af_prvl = memedian(af_prvl),
+                popsize = memedian(popsize)), keyby = .(age, sex, year)]
         prvl[unclbr, on = c("year", "age", "sex"), `:=` (
           af_prvl_correction = i.af_prvl_correction # Note corrections for prvl are rates
         )]
@@ -498,8 +496,8 @@ Simulation <-
           #stroke_mrtl = stroke_deaths/popsize,
           nonmodelled_mrtl = nonmodelled_deaths/popsize,
           popsize, age, sex, year, mc)
-          ][, .(nonmodelled_mrtl = mean(nonmodelled_mrtl),
-                popsize = mean(popsize)), keyby = .(age, sex, year)]
+          ][, .(nonmodelled_mrtl = memedian(nonmodelled_mrtl),
+                popsize = memedian(popsize)), keyby = .(age, sex, year)]
 
         #benchmark <- read_fst(file.path("./inputs/disease_burden", "chd_ftlt.fst"), columns = c("age", "sex", "year", "mu2") , as.data.table = TRUE)[age == age_ - 1L,]
         #mrtl[benchmark, on = c("age", "sex", "year"), chd_ftlt_clbr_fctr := mu2/chd_mrtl]
@@ -816,14 +814,25 @@ Simulation <-
 
         if (dir.exists(self$design$sim_prm$output_dir)) {
 
-        fl <- list.files(self$design$sim_prm$output_dir, full.names = TRUE,
-                         recursive = TRUE)
-
+          # Check for safety that folders /lifecourse, /tables, /plots, and /summaries exist to avoid accidental deletes of other folders
+          if (dir.exists(file.path(self$design$sim_prm$output_dir, "lifecourse")) &&
+            dir.exists(file.path(self$design$sim_prm$output_dir, "summaries")) &&
+            dir.exists(file.path(self$design$sim_prm$output_dir, "tables")) &&
+            dir.exists(file.path(self$design$sim_prm$output_dir, "plots"))) {
+          
+            fl <- list.files(self$design$sim_prm$output_dir,
+              full.names = TRUE,
+              recursive = TRUE
+            )
         file.remove(fl)
 
-        if (length(fl) > 0 && self$design$sim_prm$logs)
+            if (length(fl) > 0 && self$design$sim_prm$logs) {
           message("Output files deleted.")
+            }
         } else {
+            message("Output folder doesn't contain the expected subfolders. Please check the output folder path.")
+          }
+        } else { # If output folder doesn't exist
           message("Output folder doesn't exist.")
         }
 
@@ -831,6 +840,7 @@ Simulation <-
       },
 
       # del_logs ----
+
       #' @description Delete log files.
       #' @return The invisible self for chaining.
       del_logs = function() {
@@ -900,7 +910,6 @@ Simulation <-
        HEIGHT <- 5
        WIDTH <- 10
 
-
         data_pop <- read_fst("./inputs/pop_projections/pop_combined_eu.fst", columns = c("year", "country", "age", "sex", "pops"), as.data.table = TRUE)
         data_pop <- data_pop[country==self$design$sim_prm$country]
         data_pop[, country:=NULL]
@@ -929,7 +938,7 @@ Simulation <-
         #absorb_dt(obs, tt)
         #absorb_dt(obs, data_pop)
 
-        obs <- read_fst(paste0("./inputs/disease_burden/",country, "nonmodelled_ftlt.fst"), columns = c("age", "year", "sex", "mu2", "mu_lower", "mu_upper"),  as.data.table = TRUE)
+        obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/nonmodelled_ftlt.fst"), columns = c("age", "year", "sex", "mu2", "mu_lower", "mu_upper"),  as.data.table = TRUE)
         setnames(obs, c("mu2", "mu_lower", "mu_upper"), c("nonmodelled_mrtl_rate", "nonmodelled_mrtl_rate_low", "nonmodelled_mrtl_rate_upp"))
         absorb_dt(obs, data_pop)
         to_agegrp(obs, 5, 99)
@@ -1032,9 +1041,8 @@ Simulation <-
         	#stroke_incd_rate_upp = quantile(stroke_incd_rate, p = 0.975),
         	type = "modelled"), keyby = .(year, agegrp, sex)]
         
-        obs <- read_fst(paste0("./inputs/disease_burden/",country, "af_incd.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper"),  as.data.table = TRUE)
+        obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/af_incd.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper"),  as.data.table = TRUE)
         setnames(obs, c("mu", "mu_lower", "mu_upper"), c("af_incd_rate", "af_incd_rate_low", "af_incd_rate_upp"))
-        absorb_dt(obs, tt)
         absorb_dt(obs, data_pop)
         to_agegrp(obs, 5, 99)
         obs <- obs[, lapply(.SD, weighted.mean, w = pops), .SDcols = -c("pops", "age"), keyby = .(agegrp, year, sex)]
@@ -1110,7 +1118,7 @@ Simulation <-
         	#stroke_prvl_rate_upp = quantile(stroke_prvl_rate, p = 0.975),
         	type = "modelled"), keyby = .(year, agegrp, sex)]
         
-        obs <- read_fst(paste0("./inputs/disease_burden/",country, "af_prvl.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper", "prvl_mltp"),  as.data.table = TRUE)
+        obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/af_prvl.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper", "prvl_mltp"),  as.data.table = TRUE)
         setnames(obs, c("mu", "mu_lower", "mu_upper"), c("af_prvl_rate", "af_prvl_rate_low", "af_prvl_rate_upp"))
         obs[, `:=` (
             af_prvl_rate = af_prvl_rate * prvl_mltp,

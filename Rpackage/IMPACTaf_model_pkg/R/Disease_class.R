@@ -32,7 +32,6 @@
 Disease <-
   R6::R6Class(
     classname = "Disease",
-    # cloneable = FALSE, # cloneable is necessary for multi threading
     # public ------------------------------------------------------------------
     public = list(
       #' @field name The name of the disease.
@@ -44,6 +43,7 @@ Disease <-
       #' @field notes Any notes regarding the disease.
       notes = NA_character_,
 
+      # initialize ----
       #' @description Create a new disease object.
       #' @param name A string with disease name.
       #' @param friendly_name A string with disease friendly name.
@@ -54,7 +54,6 @@ Disease <-
       #' @param design_ A design object with the simulation parameters.
       #' @return A new `Disease` object.
 
-      # initialise ----
       initialize = function(name, friendly_name, meta, notes = NA_character_,
                             design_, RR) {
         if (!inherits(design_, "Design")) {
@@ -75,13 +74,13 @@ Disease <-
         # Generate unique name using the relevant RR and lags
         rr <- RR[sapply(RR, `[[`, "outcome") == self$name]
         # above only contains exposures for this disease object
-        # Reorder risk so smok_status & smok_cig is calculated before quit_yrs (irrelevant currently)
+        # Reorder risk so smok_status & smok_cig is calculated before quit_yrs
         private$rr <-
           rr[order(match(sapply(rr, `[[`, "name"),
                          c("Smoking", "Smoking_number")))]
 
         dqRNGkind("pcg64")
-        private$seed <- abs(digest2int(name, seed = 230565490L))
+        private$seed <- abs(digest2int(self$name, seed = 230565490L))
 
         private$sDiseaseBurdenDirPath <- file.path(getwd(), "inputs", "disease_burden", "Italy")
         vsFileTypes <- vector("character")
@@ -114,6 +113,7 @@ Disease <-
           vsFileTypes<- c(vsFileTypes, "ftlt")
 
         }
+        
 
         # TODO add check for stop('For type 1 incidence aggregation of RF need
         # to be "any" or "all".')
@@ -124,8 +124,8 @@ Disease <-
 
                private$chksum <-
           digest(list(
-            design_$sim_prm[c("init_year", "sim_horizon_max", "ageL", "ageH", "apply_RR_to_mrtl2",
-                              "model_trends_in_redidual_incd")],
+            design_$sim_prm[c("init_year", "sim_horizon_max", "ageL", "ageH", 
+                              "apply_RR_to_mrtl2", "model_trends_in_reidual_incd")],
             lapply(private$rr, function(x)
               x$get_input_rr()),
             lapply(private$rr, `[[`, "lag"),
@@ -142,8 +142,8 @@ Disease <-
         keys <- sapply(private$filenams[names(private$filenams) %in% vsFileTypes],
                        function(x) metadata_fst(x)$keys[[1]])
 
-        if (length(keys) > 0 && !all(sapply(keys, identical, "year"))) # TODO ?remove
-          warning("If present, 1st key needs to be year") # TODO fix message if mc present
+        if (length(keys) > 0 && !all(sapply(keys, identical, "year")))
+          stop("1st key need to be year")
 
 			# update each _indx file on snapshot change, prior to creation of new snapshot
 			bSnapshotChange <- private$UpdateDiseaseSnapshotIfInvalid(FALSE, function() {
@@ -158,7 +158,6 @@ Disease <-
 					write_fst(private[[sIndexFileType]], private$filenams[[sIndexFileType]], 100L)
           }
 			})
-
 		if(!bSnapshotChange) { # if indx up to date
           for (sFileType in vsFileTypes) {
             private[[paste0(sFileType, "_indx")]] <-
@@ -166,10 +165,10 @@ Disease <-
           }
         }
 
-
         invisible(self)
       },
 
+      # gen_parf_files ----
       #' @description Generates PARF and stores it to disk if one doesn not
       #'   exists already.
       #' @param design_ A design object with the simulation parameters.
@@ -179,8 +178,6 @@ Disease <-
       #' @param keep_intermediate_file Whether to keep the intermediate synthpop file.
 		  #' @param bUpdateExistingDiseaseSnapshot bool, update existing disease PARF and snapshot files as necessary.
       #' @return The PARF data.table if it was created, otherwise `NULL`.
-
-      # gen_parf_files ----
 
       gen_parf_files = function(design_ = design, diseases_ = diseases,
                                 popsize = 100, check = design_$sim_prm$logs,
@@ -205,13 +202,18 @@ Disease <-
         private$UpdateDiseaseSnapshotIfInvalid(TRUE, function() self$del_parf_file())
         if (file.exists(private$parf_filenam)) return(NULL) # nothing to do
 
-        tmpfile <- file.path(private$parf_dir,
-                             paste0("PARF_", self$name, "_", digest(list(
-                                lapply(private$rr, function(x)
-                                  x$get_input_rr()),
-                                lapply(private$rr, `[[`, "lag"),
-                                lapply(private$rr, `[[`, "distribution")
-                              )), ".qs"))
+        tmpfile <- file.path(
+                  private$parf_dir,
+                  paste0("PARF_", self$name, "_", digest(
+                    list(
+                      lapply(private$rr, function(x) {
+                        x$get_input_rr()
+                      }),
+                      lapply(private$rr, `[[`, "lag"),
+                      lapply(private$rr, `[[`, "distribution")
+                    )
+                  ), ".qs")
+                )
 
         if (file.exists(tmpfile)) {
           if (design_$sim_prm$logs) message("Reading file from cache.")
@@ -237,7 +239,6 @@ Disease <-
           )
 
           ff <- clone_dt(ff, 10, idcol = NULL)
-
 
           # NOTE future and mclapply do not work here for some reason
           if (.Platform$OS.type == "windows") {
@@ -289,7 +290,8 @@ cl <-
             .export = NULL,
             .noexport = NULL # c("time_mark")
           ) %dopar% {
-            private$gen_sp_forPARF(mc_iter, ff = ff, design_ = design_, diseases_ = diseases_)
+            private$gen_sp_forPARF(mc_iter, ff, design_ = design_,
+                                   diseases_ = diseases_)
 
           }
 
@@ -300,8 +302,7 @@ cl <-
           ans$pop <- rbindlist(xps_dt)
           ans$pop [, `:=` (pid = .I, pid_mrk = TRUE)] # TODO add check to avoid intmax limit
           ans$mc <- 0L
-          ans$mc_aggr <- 0L # TODO: Check with Chris. Needed so that PARF files can read prevalence
-                            #       for diseases that act as exposures!
+          ans$mc_aggr <- 0L
 
           # NOTE xps_dt does not contain disease init prevalence. I simulate
           # here as set_init_prvl expects a synthpop and not a data.table as

@@ -1,53 +1,15 @@
 # change L6 to L10 and remove "#" from L54 to L84 for IMPACT-NCD-JAPAN
 source("./global.R")
-
-# options(warn = 2)
-
-
-# source("./Rpackage/IMPACTaf_model_pkg/R/SynthPop_class.R")
-# source("./Rpackage/IMPACTaf_model_pkg/R/Design_class.R")
-
 design <- Design$new("./inputs/sim_design.yaml")
-
-sp <- SynthPop$new(0L, design)
-sp$delete_synthpop(1L)
-fl <- list.files("./simulation",  full.names = TRUE,  recursive = TRUE)
-unlink(fl[-1]) # delete simulation cache has context menu
-
-
-# recombine the chunks of large files
-# TODO logic to delete these files
-if (file.exists("./simulation/large_files_indx.csv")) {
-  fl <- fread("./simulation/large_files_indx.csv")$pths
-  for (i in 1:length(fl)) {
-    if (file.exists(fl[i])) next
-    file <- fl[i]
-    # recombine the chunks
-    if (.Platform$OS.type == "unix") {
-      system(paste0("cat ", file, ".chunk?? > ", file, ""))
-    } else if (.Platform$OS.type == "windows") {
-      # For windows split and cat are from https://unxutils.sourceforge.net/
-      shell(paste0("cat ", file, ".chunk?? > ", file, ""))
-    } else {
-      stop("Operating system is not supported.")
-    }
-  }
-}
-
 # RR ----
 # Create a named list of Exposure objects for the files in ./inputs/RR
 fl <- list.files(path = "./inputs/RR", pattern = ".csvy$", full.names = TRUE)
-fl
-
 RR <- future_lapply(fl, Exposure$new, design, future.seed = 950480304L)
-RR
-
 # RR <- vector("list", length(fl))
 # for (i in seq_along(fl)) {
 #     print(fl[i])
 #     RR[[i]] <- Exposure$new(fl[i], design)
 # }
-
 names(RR) <- sapply(RR, function(x) x$get_name())
 invisible(future_lapply(RR, function(x) {
     x$gen_stochastic_effect(design, overwrite = TRUE, smooth = FALSE)
@@ -63,7 +25,6 @@ diseases <- lapply(design$sim_prm$diseases, function(x) {
     x[["RR"]] <- RR
     do.call(Disease$new, x)
 })
-
 names(diseases) <- sapply(design$sim_prm$diseases, `[[`, "name")
 
 mk_scenario_init2 <- function(scenario_name, diseases_, sp, design_) {
@@ -93,28 +54,12 @@ mk_scenario_init2 <- function(scenario_name, diseases_, sp, design_) {
 # ll <- sim$gen_synthpop_demog(design)
 sp  <- SynthPop$new(1L, design)
 
-# create systn pop
-#----------------------------------------------------------------#
-#lapply(diseases, function(x) x$harmonise_epi_tables(sp))
-
-
-# self <- diseases$nonmodelled$.__enclos_env__$self
-# private <- diseases$nonmodelled$.__enclos_env__$private
-
-design_ <- design
-diseases_ <- diseases
-
-af_nonmodelled_xps <- Exposure$new("/home/rony/projects/IMPACTaf/inputs/RR/af~nonmodelled.csvy", design_)
-
-self <- af_nonmodelled_xps$.__enclos_env__$self
-private <- af_nonmodelled_xps$.__enclos_env__$private
-
+# lapply(diseases, function(x) x$harmonise_epi_tables(sp))
 
 lapply(diseases, function(x) {
     print(x)
     x$gen_parf_files(design)
 })
-
 lapply(diseases, function(x) {
     print(x)
     x$gen_parf(sp, design, diseases)
@@ -124,85 +69,6 @@ lapply(diseases, function(x) {
     print(x)
     x$set_init_prvl(sp, design)
 })
-
-
-
-################## Testing for set_rr #########################
-sp_ <- copy(sp)
-
-if (!inherits(design_, "Design"))
-  stop("Argument design_ needs to be a Design object.")
-if (!inherits(sp_, "SynthPop"))
-  stop("Argument sp_ needs to be a SynthPop object.")
-if (private$nam_rr %in% names(sp_$pop))
-  stop(private$nam_rr, " already present in the data.")
-
-xps_tolag <- paste0(self$name, "_curr_xps")
-
-if (self$name %in% names(sp_$pop)) {
-  # To prevent overwriting t2dm_prvl, af_prvl etc.
-  if (!xps_tolag %in% names(sp_$pop)) {
-    set(sp_$pop, NULL, xps_tolag, 0L) # Assume only missing for diseases
-    sp_$pop[get(self$name) > 0, (xps_tolag) := 1L]
-  }
-  setnames(sp_$pop, self$name, paste0(self$name, "____"))
-}
-
-
-if (inherits(sp_$pop[[xps_tolag]], "numeric")) {
-  rw <- 0
-} else if (inherits(sp_$pop[[xps_tolag]], "integer")) {
-  rw <- 0L
-} else if (inherits(sp_$pop[[xps_tolag]], "factor")) {
-  rw <- 1L # The first level
-} else {
-  stop("Only numerics, integers, and factors are supported")
-}
-
-set(sp_$pop, NULL, self$name, # column without _curr_xps is lagged
-    shift_bypid(sp_$pop[[xps_tolag]], self$get_lag(sp_$mc_aggr), sp_$pop$pid, rw))
-# setnafill(sp_$pop, "nocb", cols = self$name)
-            
-absorb_dt(sp_$pop, self$get_rr(sp_$mc_aggr, design_, drop = FALSE))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 lapply(diseases, function(x) {
     print(x)
@@ -230,70 +96,10 @@ lapply(diseases, function(x) {
 # write_fst(new, "/home/ckyprid/My_Models/IMPACTncd_Japan/inputs/disease_burden/nonmodelled_ftlt.fst")
 
 l <- mk_scenario_init2("", diseases, sp, design)
-
 simcpp(sp$pop, l, sp$mc)
 
 sp$update_pop_weights()
-
 sp$pop[, mc := sp$mc_aggr]
-
-sp$pop <- sp$pop[all_cause_mrtl >= 0L &
-         year >= self$design$sim_prm$init_year_long &
-         between(age, self$design$sim_prm$ageL, self$design$sim_prm$ageH), ]
-setkey(sp$pop, pid, year)
-sp$pop[, pid_mrk := mk_new_simulant_markers(pid)]
-
-# apply ESP weights
-to_agegrp(sp$pop, 5, 99)
-absorb_dt(sp$pop, private$esp_weights)
-sp$pop[, wt_esp := wt_esp * unique(wt_esp) / sum(wt_esp),
-       by = .(year, agegrp, sex)] # NOTE keyby changes the key
-
-if (self$design$sim_prm$export_xps) {
-  if (self$design$sim_prm$logs) message("Exporting exposures...")
-  private$export_xps(sp, scenario_nam)
-}
-
-nam <- c(self$design$sim_prm$cols_for_output,
-         grep("^cms_|_prvl$|_dgns$|_mrtl$", names(sp$pop), value = TRUE))
-nam <- grep("^prb_", nam, value = TRUE, invert = TRUE) # exclude prb_ ... _dgns
-sp$pop[, setdiff(names(sp$pop), nam) := NULL]
-sp$pop[, mc := sp$mc_aggr]
-
-
-# TODO add logic for the years of having MM. Currently 1 is not the real
-# incidence. It is still prevalence
-sp$pop[, `:=` (
-  cms1st_cont_prvl   = carry_forward_incr(as.integer(cms_count == 1),
-                                     pid_mrk, TRUE, 1L, byref = TRUE),
-  cmsmm0_prvl   = carry_forward_incr(as.integer(cms_score > 0),
-                                     pid_mrk, TRUE, 1L, byref = TRUE),
-  cmsmm1_prvl   = carry_forward_incr(as.integer(cms_score > 1),
-                                     pid_mrk, TRUE, 1L, byref = TRUE),
-  cmsmm1.5_prvl = carry_forward_incr(as.integer(cms_score > 1.5),
-                                     pid_mrk, TRUE, 1L, byref = TRUE),
-  cmsmm2_prvl   = carry_forward_incr(as.integer(cms_score > 2),
-                                     pid_mrk, TRUE, 1L, byref = TRUE)
-)]
-
-  sp$pop[, scenario := scenario_nam]
-
-  setkeyv(sp$pop, c("pid", "year"))
-
-# Write lifecourse
-  if (self$design$sim_prm$logs) message("Exporting lifecourse...")
-
-  if (self$design$sim_prm$avoid_appending_csv) {
-    fnam <- private$output_dir(paste0(
-      "lifecourse/", sp$mc_aggr, "_", sp$mc, "_lifecourse.csv"
-    ))
-  } else {
-    fnam <- private$output_dir(paste0(
-      "lifecourse/", sp$mc_aggr, "_lifecourse.csv.gz"
-    ))
-  }
-  fwrite_safe(sp$pop, fnam)
-
 
 # self <- IMPACTncd$.__enclos_env__$self
 # private <- IMPACTncd$.__enclos_env__$private
@@ -492,7 +298,8 @@ lapply(diseases, function(x) {
 })
 lapply(diseases, function(x) {
     print(x)
-    x$set_mrtl_prb(sp, dessource("./global.R")
+    x$set_mrtl_prb(sp, design)
+})
 # # diseases$t2dm$harmonise_epi_tables(sp)
  # diseases$t2dm$gen_parf(sp, design)
  # diseases$t2dm$set_init_prvl(sp, design)
@@ -568,7 +375,9 @@ sp$pop[!is.na(all_cause_mrtl), sum(obesity_prvl > 0)/.N, keyby = year][, plot(ye
 
 
 # export xps
-dt <- copy(sp$pop)source("./global.R")
+dt <- copy(sp$pop)
+mc_ <- sp$mc_aggr
+export_xps <- function(mc_,
                        dt,
                        write_to_disk = TRUE,
                        filenam = "val_xps_output.csv") {
