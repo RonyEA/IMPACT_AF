@@ -1,10 +1,10 @@
 # change L6 to L10 and remove "#" from L54 to L84 for IMPACT-NCD-JAPAN
 source("./global.R")
-design <- Design$new("./inputs/sim_design.yaml")
+design_ <- Design$new("./inputs/sim_design.yaml")
 # RR ----
 # Create a named list of Exposure objects for the files in ./inputs/RR
 fl <- list.files(path = "./inputs/RR", pattern = ".csvy$", full.names = TRUE)
-RR <- future_lapply(fl, Exposure$new, design, future.seed = 950480304L)
+RR <- future_lapply(fl, Exposure$new, design_, future.seed = 950480304L)
 # RR <- vector("list", length(fl))
 # for (i in seq_along(fl)) {
 #     print(fl[i])
@@ -12,13 +12,50 @@ RR <- future_lapply(fl, Exposure$new, design, future.seed = 950480304L)
 # }
 names(RR) <- sapply(RR, function(x) x$get_name())
 invisible(future_lapply(RR, function(x) {
-    x$gen_stochastic_effect(design, overwrite = TRUE, smooth = FALSE)
+    x$gen_stochastic_effect(design_, overwrite = TRUE, smooth = FALSE)
 },
 future.seed = 627524136L))
 # NOTE smooth cannot be exported to Design for now, because the first time
 # this parameter changes we need logic to overwrite unsmoothed files
 rm(fl)
 #
+
+design_$sim_prm$diseases[1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Generate diseases ----
 diseases <- lapply(design$sim_prm$diseases, function(x) {
     x[["design_"]] <- design

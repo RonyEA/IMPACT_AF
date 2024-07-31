@@ -1,29 +1,17 @@
 source("./global.R")
 
 IMPACTncd <- Simulation$new("./inputs/sim_design_calibration.yaml")
-
-# IMPACTncd$
-#   del_logs()$
-#   del_outputs()
-
-
 self <- IMPACTncd$.__enclos_env__$self
 private <- IMPACTncd$.__enclos_env__$private
 
-replace <- FALSE
+replace <- TRUE
 mc <- 1:10
 
 self$reconstruct_large_files()
-
 country <- self$design$sim_prm$country
-
 export_xps <- self$design$sim_prm$export_xps # save the original value to be restored later
-
 self$design$sim_prm$export_xps <- FALSE # turn off export_xps to speed up the calibration
-
-
 private$create_empty_calibration_prms_file(replace = replace)
-
 
 clbr <- fread("./simulation/calibration_prms.csv", 
                 colClasses = list(numeric = c("af_incd_clbr_fctr",
@@ -58,6 +46,8 @@ if (replace) {
 
 age_ <- age_start + 0
 
+age_ <- 70
+
 # Run the simulation from min to max age
 for (age_ in age_start:self$design$sim_prm$ageH) {
   # Run the simulation and export summaries. TODO restrict ages for efficiency.
@@ -73,14 +63,14 @@ for (age_ in age_start:self$design$sim_prm$ageH) {
 
 
 ########### Test #########################
-  trial <- unclbr[age == age_, .(af_incd = as.integer(af_incd/popsize)), keyby = .(age, sex, year, mc)]
+  trial <- unclbr[age == age_, .(af_incd = af_incd/popsize), keyby = .(age, sex, year, mc)]
 
   trial[, .(af_incd = mean(af_incd)), keyby = .(age, sex, year)]
 ########### Test #########################
 
 
   unclbr <- unclbr[age == age_, .(af_incd = af_incd/popsize), keyby = .(age, sex, year, mc)
-    ][, .(af_incd = memedian(af_incd)), keyby = .(age, sex, year)]
+    ][, .(af_incd = mean(af_incd)), keyby = .(age, sex, year)]
 
   # for CHD
   # fit a log-log linear model to the uncalibrated results and store the coefficients

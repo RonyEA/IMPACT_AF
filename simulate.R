@@ -38,11 +38,12 @@ IMPACTncd$export_summaries(
   multicore = FALSE,
   type = c(
     "prvl", "incd", "mrtl",
-    # "dis_mrtl", 
-    # "le", "hle", "dis_char", 
-    # "allcause_mrtl_by_dis", "cms", 
+    "dis_mrtl", 
+    "le", "hle", "dis_char", 
+    "allcause_mrtl_by_dis", "cms", 
     "qalys"
-  )
+  ),
+  single_year_of_age= TRUE
 )
 
 # Add qalys and cost 

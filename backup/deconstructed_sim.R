@@ -19,6 +19,7 @@ future.seed = 627524136L))
 # this parameter changes we need logic to overwrite unsmoothed files
 rm(fl)
 #
+# test Disease Class
 # Generate diseases ----
 diseases <- lapply(design$sim_prm$diseases, function(x) {
     x[["design_"]] <- design
@@ -64,6 +65,7 @@ lapply(diseases, function(x) {
     print(x)
     x$gen_parf(sp, design, diseases)
 })
+
 
 lapply(diseases, function(x) {
     print(x)

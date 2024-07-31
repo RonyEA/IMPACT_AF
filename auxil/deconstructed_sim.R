@@ -19,6 +19,7 @@ future.seed = 627524136L))
 # this parameter changes we need logic to overwrite unsmoothed files
 rm(fl)
 #
+
 # Generate diseases ----
 diseases <- lapply(design$sim_prm$diseases, function(x) {
     x[["design_"]] <- design
@@ -54,12 +55,20 @@ mk_scenario_init2 <- function(scenario_name, diseases_, sp, design_) {
 # ll <- sim$gen_synthpop_demog(design)
 sp  <- SynthPop$new(1L, design)
 
+self <- diseases$af$.__enclos_env__$self
+private <- diseases$af$.__enclos_env__$private
+
+design_ <- design
+diseases_ <- diseases
+
+
 # lapply(diseases, function(x) x$harmonise_epi_tables(sp))
 
 lapply(diseases, function(x) {
     print(x)
     x$gen_parf_files(design)
 })
+
 lapply(diseases, function(x) {
     print(x)
     x$gen_parf(sp, design, diseases)
@@ -106,6 +115,7 @@ sp$pop[, mc := sp$mc_aggr]
 
 self <- diseases$nonmodelled$.__enclos_env__$self
 private <- diseases$nonmodelled$.__enclos_env__$private
+
 design_ <- design
 diseases_ <- diseases
 popsize <- 100

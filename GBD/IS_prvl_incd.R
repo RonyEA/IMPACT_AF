@@ -27,7 +27,7 @@ x <- dt[year == 2019 & location == "Italy" & sex == "Male" & measure == "Prevale
 y <- dt[year == 2019 & location == "Italy" & sex == "Male" & measure == "Prevalence",][,val]
 nlast <- 35
 
-years <- 1991:2021
+years <- 1990:2021
 loc <- unique(dt[, location])
 sex <- c("men", "women")
 measure <- c("Prevalence", "Incidence")
@@ -93,24 +93,23 @@ for (cntry in unique(dt_fitted[, country])) {
 }
 
 
-
 for (cntry in unique(dt_fitted[, country])) {
     if (!dir.exists(paste0("./inputs/disease_burden/", cntry,"/"))){
         dir.create(paste0("./inputs/disease_burden/", cntry,"/"))
-        if (!file.exists(paste0("./inputs/disease_burden/", cntry,"/IS_incd.fst"))) {
-            temp_dt <- dt_incd[country==cntry]
-            setkey(temp_dt, year)
+    }
 
-            write_fst(temp_dt, paste0("./inputs/disease_burden/", cntry,"/IS_incd.fst"))
-            write_fst(temp_dt[, .(from=.I[1], to=.I[.N]), by=year], paste0("./inputs/disease_burden/", cntry, "/IS_incd_indx.fst"))
-        }
-        if (!file.exists(paste0("./inputs/disease_burden/", cntry,"/IS_prvl.fst"))) {
-            temp_dt <- dt_prvl[country==cntry]
-            setkey(temp_dt, year)
+    if (!file.exists(paste0("./inputs/disease_burden/", cntry,"/IS_incd.fst"))) {
+        temp_dt <- dt_incd[country==cntry]
+        setkey(temp_dt, year)
+        write_fst(temp_dt, paste0("./inputs/disease_burden/", cntry,"/IS_incd.fst"))
+        write_fst(temp_dt[, .(from=.I[1], to=.I[.N]), by=year], paste0("./inputs/disease_burden/", cntry, "/IS_incd_indx.fst"))
+    }
 
-            write_fst(temp_dt, paste0("./inputs/disease_burden/", cntry,"/IS_prvl.fst"))
-            write_fst(temp_dt[, .(from=.I[1], to=.I[.N]), by=year], paste0("./inputs/disease_burden/", cntry, "/IS_prvl_indx.fst"))
-        }
+    if (!file.exists(paste0("./inputs/disease_burden/", cntry,"/IS_prvl.fst"))) {
+        temp_dt <- dt_prvl[country==cntry]
+        setkey(temp_dt, year)
+        write_fst(temp_dt, paste0("./inputs/disease_burden/", cntry,"/IS_prvl.fst"))
+        write_fst(temp_dt[, .(from=.I[1], to=.I[.N]), by=year], paste0("./inputs/disease_burden/", cntry, "/IS_prvl_indx.fst"))
     }
 }
 

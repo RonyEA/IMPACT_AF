@@ -43,7 +43,6 @@ Disease <-
       #' @field notes Any notes regarding the disease.
       notes = NA_character_,
 
-      # initialize ----
       #' @description Create a new disease object.
       #' @param name A string with disease name.
       #' @param friendly_name A string with disease friendly name.
@@ -54,6 +53,7 @@ Disease <-
       #' @param design_ A design object with the simulation parameters.
       #' @return A new `Disease` object.
 
+      # initialise ----
       initialize = function(name, friendly_name, meta, notes = NA_character_,
                             design_, RR) {
         if (!inherits(design_, "Design")) {
@@ -71,6 +71,8 @@ Disease <-
         self$meta          <- meta
         self$notes         <- notes
 
+
+
         # Generate unique name using the relevant RR and lags
         rr <- RR[sapply(RR, `[[`, "outcome") == self$name]
         # above only contains exposures for this disease object
@@ -80,7 +82,7 @@ Disease <-
                          c("Smoking", "Smoking_number")))]
 
         dqRNGkind("pcg64")
-        private$seed <- abs(digest2int(self$name, seed = 230565490L))
+        private$seed <- abs(digest2int(name, seed = 230565490L))
 
         private$sDiseaseBurdenDirPath <- file.path(getwd(), "inputs", "disease_burden", "Italy")
         vsFileTypes <- vector("character")
@@ -125,7 +127,7 @@ Disease <-
                private$chksum <-
           digest(list(
             design_$sim_prm[c("init_year", "sim_horizon_max", "ageL", "ageH", 
-                              "apply_RR_to_mrtl2", "model_trends_in_reidual_incd")],
+                              "apply_RR_to_mrtl2")],
             lapply(private$rr, function(x)
               x$get_input_rr()),
             lapply(private$rr, `[[`, "lag"),
