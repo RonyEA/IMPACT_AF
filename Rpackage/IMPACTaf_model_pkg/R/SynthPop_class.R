@@ -574,7 +574,7 @@ SynthPop <-
                     dt <- dt[year == 2000L + design_$sim_prm$init_year]
 
                     dt <- dt[age == "100+", age := 100]
-                    dt <- dt[, age := as.numeric(age)]
+                    dt <- dt[, age := as.integer(age)]
 
                     dt <- dt[age %in% c(design_$sim_prm$ageL:design_$sim_prm$ageH)] # TODO: Needs fix? Check old version
 

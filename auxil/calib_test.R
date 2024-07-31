@@ -16,12 +16,13 @@ replace <- FALSE
 #   export_summaries(multicore = TRUE, type = c("incd", "prvl", "dis_mrtl"), single_year_of_age = TRUE)
 
 unclbr <- fread(file.path(self$design$sim_prm$output_dir, "summaries", "incd_scaled_up.csv.gz"), 
-                     select = c("year", "age", "sex", "mc", "popsize", "chd_incd", "stroke_incd"))
-unclbr <- unclbr[age == age_, .(chd_incd = chd_incd/popsize, stroke_incd = stroke_incd/popsize), keyby = .(age, sex, year, mc)
-   ][, .(chd_incd = median(chd_incd), stroke_incd = median(stroke_incd)), keyby = .(age, sex, year)]
+                     select = c("year", "age", "sex", "mc", "popsize", "af_incd"))
+                     
+unclbr <- unclbr[age == age_, .(af_incd = af_incd/popsize), keyby = .(age, sex, year, mc)
+   ][, .(chd_incd = median(af_incd)), keyby = .(age, sex, year)]
      
-# for CHD
-# fit a log-log linear model to the uncalibrated results and store the coefficients
+
+
 unclbr[chd_incd > 0, c("intercept_unclbr", "trend_unclbr") := as.list(coef(lm(log(chd_incd)~log(year)))), by = sex]
 unclbr[, intercept_unclbr := nafill(intercept_unclbr, "const", max(intercept_unclbr, na.rm = TRUE)), by = sex] # NOTE I use max just to return a value. It doesn't matter what value it is.
 unclbr[, trend_unclbr := nafill(trend_unclbr, "const", max(trend_unclbr, na.rm = TRUE)), by = sex] # NOTE I use max just to return a value. It doesn't matter what value it is.

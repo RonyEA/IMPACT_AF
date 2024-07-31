@@ -9,17 +9,17 @@ export_xps: yes
 keep_lifecourse: yes
 export_PARF: no
 'n': 100000 #100000 when testing, n can be small
-n_synthpop_aggregation: 10 # number of synthpops to aggregate together
+n_synthpop_aggregation: 4 # number of synthpops to aggregate together
 # n_primers: 10 # better be some multiple of n_synthpop_aggregation
-init_year_long: 2003 #max 2018 as this is the max year for af.  Change-for-IMPACT-NCD-Japan Put the oldest year for observed exposures PLUS 10 (In 2003, most of our exposure variables were observed in NHNS except for LDL-c. LDL-c were collected after 2007.
+init_year_long: 2018 #max 2018 as this is the max year for af.  Change-for-IMPACT-NCD-Japan Put the oldest year for observed exposures PLUS 10 (In 2003, most of our exposure variables were observed in NHNS except for LDL-c. LDL-c were collected after 2007.
 sim_horizon_max: 2050 # population projections do not support longer horizon corresponding to CJ function
-ageL: 40 # Simulated agents should be developed at least 10 years, and then developed in the next 5 years pass
+ageL: 50 # Simulated agents should be developed at least 10 years, and then developed in the next 5 years pass
 ageH: 99 # This was based on observed exposure data and observed population size
 apply_RR_to_mrtl2: yes # Is disease mortality influenced by exposures like incidence? NOTE it affects nonmodelled as well
 calibrate_to_incd_trends: yes # Use incidance calibration multipliers from file
 calibrate_to_ftlt_trends: yes # Use fatality calibration multipliers from file
 init_year_incd_calibration: no # Indicates whether parf*p0 is calibrated to incd for the initial year
-avoid_appending_csv: yes #  Do not append on existing .csv. Rather write separately and join later. To bypass problems with Docker on windows
+avoid_appending_csv: no #  Do not append on existing .csv. Rather write separately and join later. To bypass problems with Docker on windows
 incd_uncertainty_distr: beta #  The distribution of incidence uncertainty. Either beta or uniform.
 prvl_uncertainty_distr: beta #  The distribution of prevalence uncertainty. Either beta or uniform.
 ftlt_uncertainty_distr: beta #  The distribution of case fatality uncertainty. Either beta or uniform.
@@ -40,6 +40,23 @@ diseases:
       type: ~
   notes: .na
 
+# - name: isch_stroke
+#   friendly_name: Ischaemic Stroke
+#   meta:
+#     incidence:
+#       type: 3 # might depend on exposures and rr, but will also depend on one of the conditions.
+#       influenced_by_disease_name:
+#         - af
+#       can_recur: no
+#     diagnosis:
+#       type: 1
+#       probability: 1
+#       duration_distr: NBI # in the Eng model its ziNBI
+#       mm_wt: 0.8
+#     mortality:
+#       type: ~
+#   notes: .na
+
 - name: nonmodelled
   friendly_name: nonmodelled
   meta:
@@ -51,6 +68,7 @@ diseases:
       type: 3
       influenced_by_disease_name:
         - af
+        # - isch_stroke
       code: 1
   notes: .na
 maxlag: 10 # To allow init year of 2001. 
@@ -65,8 +83,8 @@ iteration_n_max: 1000
   #output_dir: /mnt/storage_fast4/impactncd_japan/outputs # ./outputs
   #synthpop_dir: /mnt/storage_fast4/impactncd_japan/synthpop # ./inputs/synthpop
 
-output_dir: ~/projects/IMPACTaf/outputs
-synthpop_dir: ~/projects/IMPACTaf/inputs/synthpop
+output_dir: ~/projects/IMPACT_AF/outputs
+synthpop_dir: ~/projects/IMPACT_AF/inputs/synthpop
 scenarios: ''
 cols_for_output:
 - pid # NEED TO be 1st (perhaps not anymore)
@@ -78,17 +96,19 @@ cols_for_output:
 - sex
 - wt
 - wt_esp
+- mm_cluster
 strata_for_output:
 - scenario
 - year
 - agegrp
 - sex
+- mm_cluster
 exposures:
 - age
 - sex
 - bmi
 - smk
-- mm_cluster
+# - mm_cluster
   #- Fruit_vege
   #- Smoking
   #- Smoking_number
