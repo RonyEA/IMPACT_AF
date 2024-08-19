@@ -244,7 +244,7 @@ Disease <-
 
           # NOTE future and mclapply do not work here for some reason
           if (.Platform$OS.type == "windows") {
-cl <-
+            cl <-
               makeClusterPSOCK(
                 design_$sim_prm$clusternumber,
                 dryrun = FALSE,
@@ -511,10 +511,10 @@ cl <-
           setnafill(parf_dt, "c", fill = 0, cols = "mu") # fix for prostate and breast cancer
           
         if (self$name != "nonmodelled") {
-          absorb_dt(parf_dt, fread("./simulation/calibration_prms.csv",
+          parf_dt <- absorb_dt(fread("./simulation/calibration_prms.csv",
             select =
               c("year", "age", "sex", paste0(self$name, "_incd_clbr_fctr"))
-          ))
+          ), parf_dt)
         }
 
         if (self$name == "nonmodelled" || !design_$sim_prm$calibrate_to_incd_trends) 
@@ -602,6 +602,8 @@ cl <-
         colnam <-
             setdiff(names(parf_dt), intersect(names(sp$pop), names(parf_dt)))
         private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
+        # setnafill(private$parf, "c", fill = 0, cols = c("p0", "mu")) # fix for prostate and breast cancer
+
 
 
         invisible(self)
@@ -922,7 +924,7 @@ cl <-
             # Calibrate estimated incidence prbl to init year incidence
             tbl <- self$get_incd(design_$sim_prm$init_year_long, mc_ = sp$mc_aggr, design_ = design_
             )[between(age, design_$sim_prm$ageL,
-                      design_$sim_prm$ageH)]
+                                    design_$sim_prm$ageH)]
             if ("country" %in% names(tbl)) tbl[, country := NULL]
             #lookup_dt(sp$pop, tbl) #TODO: lookup_dt
             absorb_dt(sp$pop, tbl)
@@ -1346,7 +1348,7 @@ cl <-
           }
           } # end !missing(mc_)
           # out[, c("country", "measure_name", "shape1", "shape2", "prvl_mltp") := NULL]
-          out[, c("measure_name", "shape1", "shape2", "prvl_mltp") := NULL]
+          out[, c("measure_name", "cause_name", "shape1", "shape2", "prvl_mltp") := NULL]
         } else {
           message("Incidence type: ", self$meta$incidence$type)
           out <- data.table(NULL)

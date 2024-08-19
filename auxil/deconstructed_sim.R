@@ -1,4 +1,4 @@
-# change L6 to L10 and remove "#" from L54 to L84 for IMPACT-NCD-JAPAN
+# change L6 to L11 and remove "#" from L54 to L84 for IMPACT-NCD-JAPAN
 source("./global.R")
 design <- Design$new("./inputs/sim_design.yaml")
 # RR ----
@@ -88,6 +88,8 @@ lapply(diseases, function(x) {
     print(x)
     x$set_incd_prb(sp, design)
 })
+
+
 lapply(diseases, function(x) {
     print(x)
     x$set_dgns_prb(sp, design)
@@ -105,6 +107,7 @@ lapply(diseases, function(x) {
 # write_fst(new, "/home/ckyprid/My_Models/IMPACTncd_Japan/inputs/disease_burden/nonmodelled_ftlt.fst")
 
 l <- mk_scenario_init2("", diseases, sp, design)
+
 simcpp(sp$pop, l, sp$mc)
 
 sp$update_pop_weights()

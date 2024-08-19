@@ -19,6 +19,7 @@ if (TRUE) {
       "prvl", "incd", "dis_mrtl", "mrtl",
       "allcause_mrtl_by_dis"
     )
-  )$
-    validate()
+  )
+
+    IMPACTncd$validate()
 }

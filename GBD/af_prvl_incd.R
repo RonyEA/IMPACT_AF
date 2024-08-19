@@ -12,6 +12,13 @@ dt
 dt[, age := sub(" years", "", age)]
 dt[age=="95+", age := "95-100"]
 
+dt[, measure_name := measure]
+dt[, measure:=NULL]
+
+
+dt[, cause_name := "af"]
+dt[, cause := NULL]
+
 dt[, age_group := age]
 dt[, age:=NULL]
 
@@ -28,7 +35,7 @@ measure <- c("Prevalence", "Incidence")
 
 result_list <- list()
 
-combinations <- data.table(expand.grid(year = years, location = loc, sex = sex, age = age, measure = measure))
+combinations <- data.table(expand.grid(year = years, location = loc, sex = sex, age = age, measure_name = measure))
 combinations[, age_group := ""]
 
 for (age_grp in unique(dt[, age_group])) {
@@ -38,7 +45,7 @@ for (age_grp in unique(dt[, age_group])) {
     combinations[age >= lower_age & age <= upper_age, age_group := age_grp]
 }
 
-dt <- merge(combinations, dt, by = c("measure", "location", "sex", "year", "age_group"))
+dt <- merge(combinations, dt, by = c("measure_name", "location", "sex", "year", "age_group"))
 
 
 
@@ -134,8 +141,13 @@ dt[, val := NULL]
 dt[, lower := NULL]
 dt[, upper := NULL]
 
-dt_incd <- dt[measure=="Incidence"]
-dt_prvl <- dt[measure=="Prevalence"]
+dt[, age_group := NULL]
+dt[, metric := NULL]
+
+dt_incd <- dt[measure_name=="Incidence"]
+dt_prvl <- dt[measure_name=="Prevalence"]
+
+
 
 
 cntry <- unique(dt[, country])

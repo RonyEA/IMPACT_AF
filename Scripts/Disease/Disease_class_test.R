@@ -1,10 +1,10 @@
 # change L6 to L10 and remove "#" from L54 to L84 for IMPACT-NCD-JAPAN
 source("./global.R")
-design_ <- Design$new("./inputs/sim_design.yaml")
+design <- Design$new("./inputs/sim_design.yaml")
 # RR ----
 # Create a named list of Exposure objects for the files in ./inputs/RR
 fl <- list.files(path = "./inputs/RR", pattern = ".csvy$", full.names = TRUE)
-RR <- future_lapply(fl, Exposure$new, design_, future.seed = 950480304L)
+RR <- future_lapply(fl, Exposure$new, design, future.seed = 950480304L)
 # RR <- vector("list", length(fl))
 # for (i in seq_along(fl)) {
 #     print(fl[i])
@@ -12,49 +12,13 @@ RR <- future_lapply(fl, Exposure$new, design_, future.seed = 950480304L)
 # }
 names(RR) <- sapply(RR, function(x) x$get_name())
 invisible(future_lapply(RR, function(x) {
-    x$gen_stochastic_effect(design_, overwrite = TRUE, smooth = FALSE)
+    x$gen_stochastic_effect(design, overwrite = TRUE, smooth = FALSE)
 },
 future.seed = 627524136L))
 # NOTE smooth cannot be exported to Design for now, because the first time
 # this parameter changes we need logic to overwrite unsmoothed files
 rm(fl)
 #
-
-design_$sim_prm$diseases[1]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Generate diseases ----
 diseases <- lapply(design$sim_prm$diseases, function(x) {
@@ -91,16 +55,94 @@ mk_scenario_init2 <- function(scenario_name, diseases_, sp, design_) {
 # ll <- sim$gen_synthpop_demog(design)
 sp  <- SynthPop$new(1L, design)
 
+self <- diseases$af$.__enclos_env__$self
+private <- diseases$af$.__enclos_env__$private
+
+design_ <- design
+diseases_ <- diseases
+
 # lapply(diseases, function(x) x$harmonise_epi_tables(sp))
 
-lapply(diseases, function(x) {
-    print(x)
-    x$gen_parf_files(design)
-})
-lapply(diseases, function(x) {
-    print(x)
-    x$gen_parf(sp, design, diseases)
-})
+# ---- gen_parf_files
+popsize = 100
+check = design_$sim_prm$logs
+keep_intermediate_file = TRUE
+bUpdateExistingDiseaseSnapshot = TRUE
+
+
+
+
+parf_dt <- read_fst(private$parf_filenam, as.data.table = TRUE)
+
+yrs <- design_$sim_prm$init_year_long
+
+tt <- self$get_incd(yrs, sp$mc_aggr, design_ = design_)[, year := NULL]
+if ("country" %in% names(tt)) tt[, country := NULL]
+
+absorb_dt(parf_dt, tt) # now mu is incd
+
+
+clbr <- fread("./simulation/calibration_prms.csv",  
+            select = c("year", "age", "sex", paste0(self$name, "_incd_clbr_fctr"))
+            )
+
+
+setnafill(parf_dt, "c", fill = 0, cols = "mu") # fix for prostate and breast cancer
+  
+parf_dt <- absorb_dt(fread("./simulation/calibration_prms.csv",
+  select =
+    c("year", "age", "sex", paste0(self$name, "_incd_clbr_fctr"))
+), parf_dt)
+
+
+
+colnam <-
+    setdiff(names(parf_dt), intersect(names(sp$pop), names(parf_dt)))
+
+
+test <- cbind(sp$pop, parf_dt)
+
+# private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
+private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 lapply(diseases, function(x) {
     print(x)
