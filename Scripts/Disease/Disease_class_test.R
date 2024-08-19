@@ -100,12 +100,16 @@ colnam <-
     setdiff(names(parf_dt), intersect(names(sp$pop), names(parf_dt)))
 
 
-test <- cbind(sp$pop, parf_dt)
 
-# private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
 private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
 
+if ("p0" %in% names(private$parf)) {
+    setnafill(private$parf, "c", fill = 0, cols = "p0") # fix for prostate and breast cancer
+}
 
+if ("mu" %in% names(private$parf)) {
+    setnafill(private$parf, "c", fill = 0, cols = "mu") # fix for prostate and breast cancer
+}
 
 
 

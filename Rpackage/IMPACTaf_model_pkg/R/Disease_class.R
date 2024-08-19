@@ -602,9 +602,15 @@ Disease <-
         colnam <-
             setdiff(names(parf_dt), intersect(names(sp$pop), names(parf_dt)))
         private$parf <- parf_dt[sp$pop, on = .NATURAL, ..colnam]
-        # setnafill(private$parf, "c", fill = 0, cols = c("p0", "mu")) # fix for prostate and breast cancer
 
 
+        if ("p0" %in% names(private$parf)) {
+            setnafill(private$parf, "c", fill = 0, cols = "p0") 
+        }
+
+        if ("mu" %in% names(private$parf)) {
+            setnafill(private$parf, "c", fill = 0, cols = "mu")
+        }
 
         invisible(self)
       },
