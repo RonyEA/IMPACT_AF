@@ -55,11 +55,14 @@ mk_scenario_init2 <- function(scenario_name, diseases_, sp, design_) {
 # ll <- sim$gen_synthpop_demog(design)
 sp  <- SynthPop$new(1L, design)
 
-self <- diseases$af$.__enclos_env__$self
-private <- diseases$af$.__enclos_env__$private
+# self <- diseases$af$.__enclos_env__$self
+# private <- diseases$af$.__enclos_env__$private
 
-design_ <- design
-diseases_ <- diseases
+# self <- diseases$nonmodelled$.__enclos_env__$self
+# private <- diseases$nonmodelled$.__enclos_env__$private
+
+# design_ <- design
+# diseases_ <- diseases
 
 
 # lapply(diseases, function(x) x$harmonise_epi_tables(sp))
