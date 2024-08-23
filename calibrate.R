@@ -11,7 +11,7 @@ IMPACTncd$
 IMPACTncd$
   del_logs()$
   del_outputs()$
-  calibrate_incd_ftlt(1:10, replace = FALSE)$
+  calibrate_incd_ftlt(1:100, replace = FALSE)$
   del_logs()$
   del_outputs()
   

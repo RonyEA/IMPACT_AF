@@ -376,19 +376,16 @@ Simulation <-
         clbr <- fread("./simulation/calibration_prms.csv", 
                         colClasses = list(numeric = c("af_incd_clbr_fctr",
                                                        "nonmodelled_ftlt_clbr_fctr")))
+
         memedian <- function(x) {
           out_med <- median(x)
           out_mean <- mean(x)
 
-          if (out_med == 0 & out_mean == 0) {
-            out <- 1
-          } else if (out_med == 0) {
-             out <- out_mean
+          if (out_med == 0) {
+            return(out_mean)
           } else {
-            out <- out_med
+            return(out_med)
           }
-
-          return(out)
         }
 
         if (replace) {
@@ -419,8 +416,7 @@ Simulation <-
                         select = c("year", "age", "sex", "mc", "popsize", "af_incd"))
         unclbr <- unclbr[age == age_, .(af_incd = af_incd/popsize), keyby = .(age, sex, year, mc)
           ][, .(af_incd = memedian(af_incd)), keyby = .(age, sex, year)]
-        
-        # for CHD
+        # for AF
         # fit a log-log linear model to the uncalibrated results and store the coefficients
         unclbr[af_incd > 0, c("intercept_unclbr", "trend_unclbr") := as.list(coef(lm(log(af_incd)~log(year)))), by = sex]
         unclbr[, intercept_unclbr := nafill(intercept_unclbr, "const", max(intercept_unclbr, na.rm = TRUE)), by = sex] # NOTE I use max just to return a value. It doesn't matter what value it is.
