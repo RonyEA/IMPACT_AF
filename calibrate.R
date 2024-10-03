@@ -18,7 +18,7 @@ IMPACTncd$
 # Run validation if TRUE. 
 if (TRUE) {
   IMPACTncd$
-    run(1:10, multicore = TRUE, "sc0")$
+    run(100, multicore = TRUE, "sc0")$
     export_summaries(
     multicore = TRUE,
     type = c(

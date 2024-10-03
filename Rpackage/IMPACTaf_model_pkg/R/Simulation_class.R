@@ -369,7 +369,6 @@ Simulation <-
         self$reconstruct_large_files()
 
         country <- self$design$sim_prm$country
-
         export_xps <- self$design$sim_prm$export_xps # save the original value to be restored later
         self$design$sim_prm$export_xps <- FALSE # turn off export_xps to speed up the calibration
         private$create_empty_calibration_prms_file(replace = replace)
@@ -424,7 +423,7 @@ Simulation <-
         # load benchmark 
         benchmark <- read_fst(file.path("./inputs/disease_burden", country, "af_incd.fst"), columns = c("age", "sex", "year", "mu") , as.data.table = TRUE)[age == age_,] 
         # fit a log-log linear model to the benchmark incidence and store the coefficients 
-        benchmark[year >= self$design$sim_prm$init_year_long, c("intercept_bnchmrk", "trend_bnchmrk") := as.list(coef(lm(log(mu)~log(year)))), by = sex]
+        benchmark[year >= self$design$sim_prm$start_year_calib, c("intercept_bnchmrk", "trend_bnchmrk") := as.list(coef(lm(log(mu)~log(year)))), by = sex]
         # calculate the calibration factors that the uncalibrated log-log model
         # need to be multiplied with so it can match the benchmark log-log model
         unclbr[benchmark[year == max(year)], af_incd_clbr_fctr := exp(intercept_bnchmrk + trend_bnchmrk * log(year)) / exp(intercept_unclbr + trend_unclbr * log(year)), on = c("age", "sex")] # Do not join on year!
@@ -936,6 +935,7 @@ Simulation <-
 
         obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/nonmodelled_ftlt.fst"), columns = c("age", "year", "sex", "mu2", "mu_lower", "mu_upper"),  as.data.table = TRUE)
         setnames(obs, c("mu2", "mu_lower", "mu_upper"), c("nonmodelled_mrtl_rate", "nonmodelled_mrtl_rate_low", "nonmodelled_mrtl_rate_upp"))
+        obs <- obs[age <= self$design$sim_prm$ageH & age >= self$design$sim_prm$ageL, ]
         absorb_dt(obs, data_pop)
         to_agegrp(obs, 5, 99)
         obs <- obs[, lapply(.SD, weighted.mean, w = pops), .SDcols = -c("pops", "age"), keyby = .(agegrp, year, sex)]
@@ -1039,6 +1039,7 @@ Simulation <-
         
         obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/af_incd.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper"),  as.data.table = TRUE)
         setnames(obs, c("mu", "mu_lower", "mu_upper"), c("af_incd_rate", "af_incd_rate_low", "af_incd_rate_upp"))
+        obs <- obs[age <= self$design$sim_prm$ageH & age >= self$design$sim_prm$ageL, ]
         absorb_dt(obs, data_pop)
         to_agegrp(obs, 5, 99)
         obs <- obs[, lapply(.SD, weighted.mean, w = pops), .SDcols = -c("pops", "age"), keyby = .(agegrp, year, sex)]
@@ -1052,7 +1053,6 @@ Simulation <-
         	facet_wrap(. ~ factor(agegrp), scales = "free") +  theme_bw() + 
         	theme(axis.text.x = element_text(angle = 90, hjust = 0.5)) + ggtitle("AF incd rate", "Men")
         ggsave(file.path(self$design$sim_prm$output_dir, "plots", "AF_as_men_incd.jpg"), p, height = HEIGHT, width = WIDTH)	
-        
         
         p <- ggplot() + 
         	geom_line(data = dt[sex == "women"], aes(x = year, y = af_incd_rate, color = type)) + 
@@ -1116,6 +1116,7 @@ Simulation <-
         
         obs <- read_fst(paste0("./inputs/disease_burden/",self$design$sim_prm$country, "/af_prvl.fst"), columns = c("age", "year", "sex", "mu", "mu_lower", "mu_upper", "prvl_mltp"),  as.data.table = TRUE)
         setnames(obs, c("mu", "mu_lower", "mu_upper"), c("af_prvl_rate", "af_prvl_rate_low", "af_prvl_rate_upp"))
+        obs <- obs[age <= self$design$sim_prm$ageH & age >= self$design$sim_prm$ageL, ]
         obs[, `:=` (
             af_prvl_rate = af_prvl_rate * prvl_mltp,
             af_prvl_rate_low = af_prvl_rate_low * prvl_mltp,
