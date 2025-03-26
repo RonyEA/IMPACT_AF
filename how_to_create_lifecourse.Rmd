@@ -60,7 +60,7 @@ In particular, you may need to adjust the `n` and `n_synthpop_aggregation` param
 IMPACTncd$
   del_logs()$
   del_outputs()$
-  run(mc = 1:5, multicore = FALSE, scenario_nam = "sc0")$
+  run(mc = 1:5, multicore = FALSE)$
   export_summaries(multicore = FALSE)
 ```
 
@@ -69,7 +69,7 @@ In the above, we use the chain syntax using $, which is equivalent to:
 ```{r, run-simulation-break, eval = FALSE}
 IMPACTncd$del_logs()
 IMPACTncd$del_outputs()
-IMPACTncd$run(mc = 1:5, multicore = FALSE, scenario_nam = "sc0")
+IMPACTncd$run(mc = 1:5, multicore = FALSE)
 IMPACTncd$export_summaries(multicore = FALSE)
 ```
 

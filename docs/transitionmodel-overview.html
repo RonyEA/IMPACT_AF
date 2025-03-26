@@ -354,7 +354,7 @@ display: none;
 
 
 <div id="overview" class="section level2">
-<h2>🧠 Overview</h2>
+<h2>Overview</h2>
 <p>The <code>TransitionModel</code> class in the
 <code>IMPACTaf_model_pkg</code> simulates individual patient-level
 transitions across health states defined by multimorbidity clusters and
@@ -370,14 +370,14 @@ regression-based transitions using a Markov framework.</p>
 <hr />
 </div>
 <div id="initialize-the-model" class="section level2">
-<h2>🛠️ Initialize the Model</h2>
+<h2>Initialize the Model</h2>
 <p>This loads the YAML configuration, sets up the initial transition
 matrix, counts MC iterations, and preloads transition probabilities.</p>
 <pre class="r"><code>tm &lt;- TransitionModel$new()</code></pre>
 <hr />
 </div>
 <div id="load-and-inspect-cohort" class="section level2">
-<h2>📋 Load and Inspect Cohort</h2>
+<h2>Load and Inspect Cohort</h2>
 <p>This loads one cohort from a specified Monte Carlo iteration and
 filters patients aged 65+.</p>
 <pre class="r"><code>cohort &lt;- tm$get_cohort(mc_counter = 1)
@@ -385,7 +385,7 @@ head(cohort)</code></pre>
 <hr />
 </div>
 <div id="initialize-patient-states" class="section level2">
-<h2>🔄 Initialize Patient States</h2>
+<h2>Initialize Patient States</h2>
 <p>Assigns each patient a starting health state
 (<code>CurrentEvent</code>) based on the initial transition matrix.</p>
 <pre class="r"><code>lifecourse &lt;- tm$initialize_states(mc_counter = 1)
@@ -393,14 +393,14 @@ head(lifecourse)</code></pre>
 <hr />
 </div>
 <div id="run-the-full-simulation" class="section level2">
-<h2>🔁 Run the Full Simulation</h2>
+<h2>Run the Full Simulation</h2>
 <p>Runs the Markov model over time and updates each patient’s state year
 by year using transition probabilities.</p>
 <pre class="r"><code>tm$run_simulation()</code></pre>
 <hr />
 </div>
 <div id="output-location" class="section level2">
-<h2>📦 Output Location</h2>
+<h2>Output Location</h2>
 <p>Simulation results are saved as <code>.csv.gz</code> files:</p>
 <pre><code>./outputs/lifecourse/transitions/{mc}_lifecourse.csv.gz</code></pre>
 <p>Each file contains: - <code>pid</code>, <code>year</code>,
@@ -418,7 +418,7 @@ head(output)</code></pre>
 <hr />
 </div>
 <div id="summary" class="section level2">
-<h2>✅ Summary</h2>
+<h2>Summary</h2>
 <p>You’ve just:</p>
 <ul>
 <li>Set up the model</li>
@@ -430,14 +430,14 @@ head(output)</code></pre>
 help page or dive into the source code.</p>
 </div>
 <div id="running-scenario-based-simulations" class="section level2">
-<h2>🔁 Running Scenario-Based Simulations</h2>
+<h2>Running Scenario-Based Simulations</h2>
 <p>The <code>TransitionModel</code> also supports simulation of
 <strong>alternative scenarios</strong>, where transition probabilities
 to specific health states can be modified. This is useful for exploring
 <strong>policy interventions, risk reduction strategies</strong>, or
 <strong>counterfactual experiments</strong>.</p>
 <div id="defining-a-scenario" class="section level3">
-<h3>📌 Defining a Scenario</h3>
+<h3>Defining a Scenario</h3>
 <p>A scenario is defined by a set of <strong>transition probability
 adjustments</strong>, passed as a named list to the
 <code>run_scenario()</code> method. For example:</p>
@@ -455,7 +455,7 @@ mass is redistributed proportionally across all other health states,
 ensuring that each row still sums to 1.</p>
 </div>
 <div id="how-run_scenario-works" class="section level3">
-<h3>⚙️ How <code>run_scenario()</code> Works</h3>
+<h3>How <code>run_scenario()</code> Works</h3>
 <p>For each Monte Carlo iteration: 1. <strong>Loads the basecase
 transition probability file</strong> 2. <strong>Applies the specified
 multipliers</strong> to the transition probabilities 3.
@@ -467,7 +467,7 @@ time 5. Saves: - Adjusted transition probabilities to:<br />
 <code>./outputs/lifecourse/transitions/scenarios/{scenario}_{mc}_lifecourse.csv.gz</code></p>
 </div>
 <div id="running-multiple-scenarios" class="section level3">
-<h3>🧪 Running Multiple Scenarios</h3>
+<h3>Running Multiple Scenarios</h3>
 <p>You can define and run multiple scenarios to compare outcomes. For
 example:</p>
 <pre class="r"><code># Scenario 2: Reduce AIS and increase AB probability

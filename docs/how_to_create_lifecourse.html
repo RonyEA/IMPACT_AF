@@ -441,13 +441,13 @@ simulation.</li>
 <pre class="r"><code>IMPACTncd$
   del_logs()$
   del_outputs()$
-  run(mc = 1:5, multicore = FALSE, scenario_nam = &quot;sc0&quot;)$
+  run(mc = 1:5, multicore = FALSE)$
   export_summaries(multicore = FALSE)</code></pre>
 <p>In the above, we use the chain syntax using $, which is equivalent
 to:</p>
 <pre class="r"><code>IMPACTncd$del_logs()
 IMPACTncd$del_outputs()
-IMPACTncd$run(mc = 1:5, multicore = FALSE, scenario_nam = &quot;sc0&quot;)
+IMPACTncd$run(mc = 1:5, multicore = FALSE)
 IMPACTncd$export_summaries(multicore = FALSE)</code></pre>
 <p>Note: In the arguments for the <code>run()</code>, we have selected
 the number of Monte Carlo iterations to be 2 (mc = 1:2). This is OK for

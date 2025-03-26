@@ -59,7 +59,7 @@ This will:
 
 ---
 
-## 📚 Optional: Check Installed Package
+## Check Installed Package
 
 After running `global.R`, load and check that the package is ready:
 
