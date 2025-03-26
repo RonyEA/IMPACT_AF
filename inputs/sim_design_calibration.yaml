@@ -84,8 +84,8 @@ iteration_n_max: 1000
   #output_dir: /mnt/storage_fast4/impactncd_japan/outputs # ./outputs
   #synthpop_dir: /mnt/storage_fast4/impactncd_japan/synthpop # ./inputs/synthpop
 
-output_dir: ~/projects/IMPACT_AF/outputs
-synthpop_dir: ~/projects/IMPACT_AF/inputs/synthpop
+output_dir: ~/Projects/IMPACT_AF/outputs
+synthpop_dir: ~/Projects/IMPACT_AF/inputs/synthpop
 scenarios: ''
 cols_for_output:
 - pid # NEED TO be 1st (perhaps not anymore)

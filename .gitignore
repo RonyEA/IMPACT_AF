@@ -41,3 +41,5 @@ Rpackage/IMPACTncd_Japan_model_pkg/man
 inputs/exposure_distributions/Table_HbA1c.fst
 inputs/exposure_distributions/Table_LDLc.fst
 inputs/exposure_distributions/Table_SBP.fst
+Scripts/
+backup/

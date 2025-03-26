@@ -1,0 +1,8 @@
+# Configuration for TransitionModel
+
+n_patients: 1000
+n_cycles: 10
+
+# File paths
+transition_matrix_path: "./inputs/transitions/Initial_Transition.csv"
+lifecourse_path: "./outputs/lifecourse"

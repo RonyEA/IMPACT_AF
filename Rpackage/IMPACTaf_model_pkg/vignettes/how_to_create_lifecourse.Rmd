@@ -1,0 +1,109 @@
+---
+title: "Introduction to IMPACTaf"
+author: "Dr. Chris Kypridemos"
+date: "11 March, 2024"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to run IMPACTaf to create lifecourse of individuals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+#### How to initialize the model
+
+
+```{r eval=FALSE}
+library(IMPACTaf)
+
+IMPACTncd <- Simulation$new("./inputs/sim_design.yaml")
+```
+
+The above line of code initializes the Simulation object, which takes in a the path to a "sim_design.yaml" file. This file contains the simulation parameters. 
+#TODO: should we describe all the parameters in the sim_design file?
+
+### `country`
+- The name of the country used for labeling or loading specific datasets (e.g., "UK" or "Italy").
+- List of countries: "Austria", "Belgium", "Cyprus", "Estonia", "Finland", "France", "Germany", "Greece", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Portugal", "Slovakia", "Slovenia", "Spain", "United Kingdom" 
+- Update this to reflect the population or setting your simulation represents.
+
+### `n`
+- Total number of individuals to simulate in each Monte Carlo iteration.
+- Example: `n: 10000` for 10,000 individuals.
+
+### `aggregation`
+- Whether the output is aggregated or kept at the individual level.
+- Set to `"none"` for individual-level lifecourse data. This should not be changed as we need individual-level data for the transition model. 
+
+### `init_year_long`
+- The calendar year in which the simulation begins.
+- Example: `init_year_long: 2020` means your simulation starts in the year 2020.
+
+### `sim_horizon_max`
+- Total number of years to simulate (the length of the time horizon).
+- Example: `sim_horizon_max: 30` for a 30-year simulation.
+
+### `ageL`, `ageH`
+- Lower and upper bounds for **age inclusion** in the simulated cohort.
+- Only individuals within this age range will be included at initialization.
+- Example:
+  ```yaml
+  ageL: 65
+  ageH: 100
+  ```
+
+In particular, you may need to adjust the `n` and `n_synthpop_aggregation` parameters to create the desired synthetic population size. If you use the same `synthpop_dir` location as in your test run, the new synthpop files will have a different filename and will not overwrite the existing files. However, you may want to delete the existing synthpop files in the folder to save disk space.
+
+1.  To run a baseline scenario, run the following chunk of code, which deletes everything inside the existing output and log folders, runs a new baseline scenario from scratch and summarises the results of the simulation. 
+
+```{r, run-simulation, eval = FALSE}
+IMPACTncd$
+  del_logs()$
+  del_outputs()$
+  run(mc = 1:5, multicore = FALSE, scenario_nam = "sc0")$
+  export_summaries(multicore = FALSE)
+```
+
+In the above, we use the chain syntax using $, which is equivalent to: 
+
+```{r, run-simulation-break, eval = FALSE}
+IMPACTncd$del_logs()
+IMPACTncd$del_outputs()
+IMPACTncd$run(mc = 1:5, multicore = FALSE, scenario_nam = "sc0")
+IMPACTncd$export_summaries(multicore = FALSE)
+```
+
+Note: In the arguments for the `run()`, we have selected the number of Monte Carlo iterations to be 2  (mc = 1:2). This is OK for a test run, but in reality, you would like to run at least 100 iterations (i.e. mc = 1:100) in production. If, at a later point, you would like to run 100 more iterations additionally, then you could do `IMPACTncd$run(mc = 101:200, multicore = FALSE, scenario_nam = "sc0")` without deleting the existing output (i.e. do not run `IMPACTncd$del_outputs()`). 
+
+We have also selected `multicore = FALSE` here so that parallel processing is not used. This slows down the simulation, but it requires substantially less computational resources. In production, you would most likely want to set this to TRUE. The third argument of the `run()` function defines the name of the baseline scenario as "sc0" here. Please do not change the name of the baseline scenario.
+
+Finally, the `export_summaries()` generates summary output files from the lifecourse files that are the raw simulation output.
+
+2. After running the code, we will create the folders shown below. The `lifecourse` folder has the same number of files as the number of iterations runs. 
+
+```{r, echo = FALSE, out.width = "50%", fig.cap = "output/hf_real folder structure"}
+knitr::include_graphics("./img/lifecourse_folder.png")
+```
+
+
+In this example, we specify the `type` to only export a few of the summary outputs to reduce computation time. We have chosen: 
+
+- **dis_char** : disease characteristics, e.g. age of onset of condition, mean duration of condition; 
+- **prvl** : prevalence of each condition; 
+- **incd** : incidence of each condition; 
+- **dis_mrtl** : disease-specific mortality; 
+- **mrtl** : all-cause mortality; 
+- **allcause_mrtl_by_dis** : all-cause mortality by disease;
+
+
+If type is not specified, all summary files are exported. 
+
+```{r,  eval = FALSE}
+IMPACTncd$
+  run(1:n_runs, multicore = FALSE) $
+    export_summaries(multicore = FALSE, type = c("dis_char", "prvl",
+                     "incd", "dis_mrtl", "mrtl",
+                     "allcause_mrtl_by_dis", "cms"))
+```
+
+

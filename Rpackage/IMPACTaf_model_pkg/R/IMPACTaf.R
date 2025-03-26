@@ -25,8 +25,9 @@
 #
 # @section Foo functions:
 # The foo functions ...
-#
-#' @docType package
+
+#' @name IMPACTaf
+#' @keywords package
 #' @author Chris Kypridemos
 #' @import Rcpp R6 data.table CKutils
 #' @importFrom R6 R6Class
@@ -44,6 +45,5 @@
 #' @importFrom foreach foreach
 #' @importFrom igraph make_graph is_dag V neighbors all_simple_paths topo_sort
 #' @useDynLib IMPACTaf
-#' @name IMPACTaf
 NULL
 

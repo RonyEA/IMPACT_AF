@@ -14,8 +14,9 @@ IMPACTncd$
   calibrate_incd_ftlt(1:100, replace = FALSE)$
   del_logs()$
   del_outputs()
-  
-# Run validation if TRUE. 
+
+
+# Run validation if TRUE.
 if (TRUE) {
   IMPACTncd$
     run(100, multicore = TRUE, "sc0")$
@@ -27,5 +28,5 @@ if (TRUE) {
     )
   )
 
-    IMPACTncd$validate()
+  IMPACTncd$validate()
 }

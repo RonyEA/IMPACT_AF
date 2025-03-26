@@ -1,0 +1,82 @@
+---
+title: "How to Install and Set Up the IMPACTaf Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Overview
+
+This guide explains how to **install and initialize the IMPACTaf model** from GitHub. It will walk through setting up dependencies and installing the internal R package used by the model.
+
+---
+
+## Step 1: Clone or Download the Repository
+
+You can either:
+
+- Clone the repo:
+  ```bash
+  git clone https://github.com/RonyEA/IMPACT_AF.git
+  ```
+
+- Or download the `.zip`:
+  - Click **Code > Download ZIP**
+  - Extract it to a folder on your local machine
+
+---
+
+## Step 2: Set the Working Directory
+
+In R or RStudio, set your working directory to the project folder:
+
+```r
+setwd("/path/to/IMPACTaf")  # Replace with your local path
+```
+
+> This is required to ensure file paths in `global.R` are correctly resolved.
+
+---
+
+## Step 3: Run the Global Initialization Script
+
+Once you're in the project directory, run:
+
+```r
+source("global.R")
+```
+
+This will:
+
+- Install required dependencies listed in `dependencies.yaml`
+- Install the `IMPACTaf_model_pkg` package using `remotes::install_local()`
+- Regenerate documentation via `roxygen2`
+- Cache a snapshot to avoid reinstallation if no changes are detected
+
+> ⚠️ Internet connection is required the first time to download the packages and it's dependencies.
+
+---
+
+## 📚 Optional: Check Installed Package
+
+After running `global.R`, load and check that the package is ready:
+
+```r
+library(IMPACTaf)
+
+?TransitionModel  # View documentation for the core class
+```
+
+---
+
+## ✅ Summary
+
+| Task | Command |
+|------|---------|
+| Set working directory | `setwd("/your/path/IMPACT_AF")` |
+| Install and build the model | `source("global.R")` |
+| Load the package | `library(IMPACTaf)` |
+
+You're now ready to simulate health state transitions and run scenarios!

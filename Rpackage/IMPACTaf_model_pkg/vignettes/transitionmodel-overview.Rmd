@@ -1,0 +1,186 @@
+---
+title: "Using the TransitionModel"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the TransitionModel}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = TRUE,
+  warning = TRUE
+)
+library(IMPACTaf)
+```
+
+## Overview
+
+The `TransitionModel` class in the `IMPACTaf_model_pkg` simulates individual patient-level transitions across health states defined by multimorbidity clusters and adverse events. It supports initialization from prevalence and regression-based transitions using a Markov framework.
+
+This vignette shows how to:
+
+- Initialize the model
+- Load a Monte Carlo (MC) cohort
+- Assign initial states
+- Run full transition simulations
+
+---
+
+## Initialize the Model
+
+This loads the YAML configuration, sets up the initial transition matrix, counts MC iterations, and preloads transition probabilities.
+
+```{r eval=FALSE}
+tm <- TransitionModel$new()
+```
+
+---
+
+## Load and Inspect Cohort
+
+This loads one cohort from a specified Monte Carlo iteration and filters patients aged 65+.
+
+```{r eval=FALSE}
+cohort <- tm$get_cohort(mc_counter = 1)
+head(cohort)
+```
+
+---
+
+## Initialize Patient States
+
+Assigns each patient a starting health state (`CurrentEvent`) based on the initial transition matrix.
+
+```{r eval=FALSE}
+lifecourse <- tm$initialize_states(mc_counter = 1)
+head(lifecourse)
+```
+
+---
+
+## Run the Full Simulation
+
+Runs the Markov model over time and updates each patient's state year by year using transition probabilities.
+
+```{r eval=FALSE}
+tm$run_simulation()
+```
+
+---
+
+## Output Location
+
+Simulation results are saved as `.csv.gz` files:
+
+```
+./outputs/lifecourse/transitions/{mc}_lifecourse.csv.gz
+```
+
+Each file contains:
+- `pid`, `year`, `CurrentEvent`, `mm_cluster`, `agegrp`, etc.
+
+These can be used to summarize outcomes, visualize disease progression, or feed into cost-effectiveness models.
+
+---
+
+## Output Preview
+
+If desired, you can preview the first few transitions like this:
+
+```{r eval=FALSE}
+output <- data.table::fread("./outputs/lifecourse/transitions/1_lifecourse.csv.gz")
+head(output)
+```
+
+---
+
+## Summary
+
+You’ve just:
+
+- Set up the model
+- Loaded patient data
+- Assigned initial health states
+- Simulated annual transitions over time
+
+For deeper technical reference, see the `?TransitionModel` help page or dive into the source code.
+
+
+
+## Running Scenario-Based Simulations
+
+The `TransitionModel` also supports simulation of **alternative scenarios**, where transition probabilities to specific health states can be modified. This is useful for exploring **policy interventions, risk reduction strategies**, or **counterfactual experiments**.
+
+### Defining a Scenario
+
+A scenario is defined by a set of **transition probability adjustments**, passed as a named list to the `run_scenario()` method. For example:
+
+```r
+# Create a model object
+tm <- TransitionModel$new()
+
+# Define a scenario where the probability of AIS is reduced by 10%
+scenario_1 <- list(AIS = 0.9)  # Reduce AIS probability by 10%
+
+# Run the scenario
+tm$run_scenario(prob_changes = scenario_1, scenario_name = "reduced_AIS_10pct")
+```
+
+Here, the transition probability to `AIS` is multiplied by 0.9 for every row in the transition matrix. The remaining probability mass is redistributed proportionally across all other health states, ensuring that each row still sums to 1.
+
+### How `run_scenario()` Works
+
+For each Monte Carlo iteration:
+1. **Loads the basecase transition probability file**
+2. **Applies the specified multipliers** to the transition probabilities
+3. **Re-normalizes** each row to sum to 1.0
+4. **Initializes the cohort** and simulates transitions over time
+5. Saves:
+   - Adjusted transition probabilities to:  
+     `./outputs/transitions/scenarios/{scenario}_{mc}_simulated_probs.csv`
+   - Lifecourse data to:  
+     `./outputs/lifecourse/transitions/scenarios/{scenario}_{mc}_lifecourse.csv.gz`
+
+### Running Multiple Scenarios
+
+You can define and run multiple scenarios to compare outcomes. For example:
+
+```r
+# Scenario 2: Reduce AIS and increase AB probability
+scenario_2 <- list(AIS = 0.8, AB = 1.2)
+
+tm$run_scenario(prob_changes = scenario_2, scenario_name = "ais_down_ab_up")
+```
+
+### 📈 Analyzing Scenario Outputs
+
+After running a scenario, you can use the output files to:
+- Compare prevalence or incidence of events across scenarios
+- Assess shifts in health state distributions over time
+
+You can load a scenario’s lifecourse output like this:
+
+```r
+library(data.table)
+
+lifecourse_scenario <- fread("./outputs/lifecourse/transitions/scenarios/1_reduced_AIS_10pct_lifecourse.csv.gz")
+
+# Example: Proportion of patients in AIS by year
+ais_prev <- lifecourse_scenario[, .(AIS_prev = mean(CurrentEvent == "AIS")), by = year]
+
+ggplot(ais_prev, aes(x = year, y = AIS_prev)) +
+  geom_line(color = "firebrick", size = 1.2) +
+  labs(title = "AIS Prevalence Over Time (Scenario)", y = "Proportion", x = "Year") +
+  theme_minimal()
+```
+
+### 🧾 Summary
+
+The scenario analysis framework allows you to:
+
+- Simulate and compare alternative scenarios
+- Evaluate robustness of outcomes under varying assumptions
+
